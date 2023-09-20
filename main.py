@@ -2,7 +2,7 @@ import os
 import time
 import sys
 
-sync_complete = "Synchronization process complete!"
+sync_complete = "Synchronization process complete! Exiting..."
 
 
 def printConsoleLog(text):
@@ -19,24 +19,28 @@ def sync():
             if fileSrc in filesTgt:
                 pathSrc = os.path.join(rootSrc, fileSrc)
                 pathTgt = os.path.join(rootTgt, fileSrc)
+                # check if file has been modified
                 if os.path.getmtime(pathSrc) > os.path.getmtime(pathTgt):
                     printConsoleLog("File " + pathSrc + " was modified")
                     os.remove(pathTgt)
                     command = f'copy "{pathSrc}" "{pathTgt}"'
                     os.system(command)
             else:
+                # check if file has been created in source
                 pathSrc = os.path.join(rootSrc, fileSrc)
                 pathTgt = os.path.join(rootTgt, fileSrc)
                 printConsoleLog("File " + pathSrc + " was created")
                 command = f'copy "{pathSrc}" "{pathTgt}"'
                 os.system(command)
 
+        # check if file has been deleted in source
         for fileTgt in filesTgt:
             if fileTgt not in filesSrc:
                 pathTgt = os.path.join(rootTgt, fileTgt)
                 printConsoleLog("File " + pathTgt + " was deleted")
                 os.remove(pathTgt)
 
+        # check if directory has been created in source
         for directorySrc in directoriesSrc:
             if directorySrc not in directoriesTgt:
                 pathSrc = os.path.join(rootSrc, directorySrc)
@@ -44,6 +48,8 @@ def sync():
                 printConsoleLog("Directory " + pathSrc + " was created")
                 command = f'xcopy "{pathSrc}" "{pathTgt}" /E /I /H /K'
                 os.system(command)
+
+        # check if directory has been deleted in source
         for directoryTgt in directoriesTgt:
             if directoryTgt not in directoriesSrc:
                 pathSrc = os.path.join(rootSrc, directoryTgt)
@@ -88,6 +94,9 @@ if not os.path.isfile(log_path):
     open(log_path, "w").close()
 
 # synchronization process
-while True:
-    sync()
-    time.sleep(synchronize_time)
+try:
+    while True:
+        sync()
+        time.sleep(synchronize_time)
+except KeyboardInterrupt:
+    printConsoleLog(sync_complete)
